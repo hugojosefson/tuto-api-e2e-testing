@@ -6,8 +6,9 @@ const fetch = require('node-fetch');
 const config = require('./config');
 
 const db = require('knex')({
-  client: 'pg',
+  client: 'mysql2',
   connection: {
+    database : 'mysql',
     host : config.db.host,
     user : config.db.user,
     password : config.db.password,

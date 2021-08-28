@@ -1,14 +1,16 @@
-version: '3.1'
+version: '3.9'
 
 services:
 
   db:
-    image: postgres
+    image: mysql
     environment:
-      POSTGRES_USER: john
-      POSTGRES_PASSWORD: mysecretpassword
+      MYSQL_DATABASE: mysql
+      MYSQL_USER: john
+      MYSQL_PASSWORD: mysecretpassword
+      MYSQL_ROOT_PASSWORD: rootsecretpassword
     expose:
-      - 5432
+      - 3306
 
   redis:
     image: "redis:alpine"
@@ -21,8 +23,8 @@ services:
     command: yarn start
     environment:
       APP_DB_HOST: db
-      APP_DB_USER: john
-      APP_DB_PASSWORD: mysecretpassword
+      APP_DB_USER: root
+      APP_DB_PASSWORD: rootsecretpassword
       APP_REDIS_HOST: redis
       APP_REDIS_PORT: 6379
       APP_EXTERNAL_URL: http://myapp-tests:8002/api
@@ -34,12 +36,12 @@ services:
 
   myapp-tests:
     image: myapp
-    command: dockerize -wait tcp://db:5432 -wait tcp://redis:6379 -wait tcp://myapp:8000 -timeout 10s bash -c "node db/init.js && yarn test"
+    command: dockerize -wait tcp://db:3306 -wait tcp://redis:6379 -wait tcp://myapp:8000 -timeout 60s bash -c "node db/init.js && yarn test"
     environment:
       APP_URL: http://myapp:8000
       APP_DB_HOST: db
-      APP_DB_USER: john
-      APP_DB_PASSWORD: mysecretpassword
+      APP_DB_USER: root
+      APP_DB_PASSWORD: rootsecretpassword
       APP_REDIS_HOST: redis
       APP_REDIS_PORT: 6379
       MOCK_SERVER_PORT: 8002

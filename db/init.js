@@ -1,8 +1,9 @@
 const config = require("../config");
 
 const db = require("knex")({
-  client: "pg",
+  client: "mysql2",
   connection: {
+    database: 'mysql',
     host: config.db.host,
     user: config.db.user,
     password: config.db.password
@@ -25,7 +26,7 @@ db.schema
     }
   })
   .then(() => {
-    console.log(`Tables created succesfully`);
+    console.log(`Tables created successfully`);
     process.exit(0);
   })
   .catch(err => {

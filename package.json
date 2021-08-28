@@ -1,7 +1,7 @@
 {
-  "name": "node-postgres",
+  "name": "tests-with-mysql-via-docker-compose",
   "version": "1.0.0",
-  "description": "Node+Postgres API: end to end testing with docker-compose example",
+  "description": "Node+MySQL: end to end testing with docker-compose example",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -20,6 +20,7 @@
     "chai": "^4.2.0",
     "chai-http": "^2.0.1",
     "mocha": "^5.2.0",
+    "mysql2": "^2.3.0",
     "supertest": "^3.3.0"
   },
   "resolutions": {

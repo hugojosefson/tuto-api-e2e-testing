@@ -1,3 +1,6 @@
+/.dockerignore
+/.idea/
+
 # Logs
 logs
 *.log

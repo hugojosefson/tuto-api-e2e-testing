@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -ex
+
+PROJECT_DIR="$(dirname "$(dirname "$0")")"
+
+cat "${PROJECT_DIR}/.gitignore" "${PROJECT_DIR}/.git/info/exclude" > "${PROJECT_DIR}/.dockerignore"
+
+# We downloaded the docker-compose script from https://github.com/docker/compose/releases/download/1.29.2/run.sh
+exec "${PROJECT_DIR}/scripts/docker-compose" up --build --abort-on-container-exit
