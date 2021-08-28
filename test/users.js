@@ -61,7 +61,9 @@ function teardownMock () {
 }
 
 describe('Users', () => {
-  before(async () => await initMock())
+  before(async () => {
+    await initMock()
+  })
 
   after(() => {
     redis.quit()

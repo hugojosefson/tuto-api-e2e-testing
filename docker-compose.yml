@@ -5,7 +5,7 @@ services:
   db:
     image: mysql:8
     environment:
-      MYSQL_DATABASE: mysql
+      MYSQL_DATABASE: mydb
       MYSQL_USER: john
       MYSQL_PASSWORD: mysecretpassword
       MYSQL_ROOT_PASSWORD: rootsecretpassword
@@ -22,9 +22,10 @@ services:
     image: myapp
     command: yarn start
     environment:
+      APP_DB_DATABASE: mydb
       APP_DB_HOST: db
-      APP_DB_USER: root
-      APP_DB_PASSWORD: rootsecretpassword
+      APP_DB_USER: john
+      APP_DB_PASSWORD: mysecretpassword
       APP_REDIS_HOST: redis
       APP_REDIS_PORT: 6379
       APP_EXTERNAL_URL: http://myapp-tests:8002/api
@@ -36,12 +37,13 @@ services:
 
   myapp-tests:
     image: myapp
-    command: dockerize -wait tcp://db:3306 -wait tcp://redis:6379 -wait tcp://myapp:8000 -timeout 60s sh -c "node src/db/init.js && yarn test"
+    command: dockerize -wait tcp://db:3306 -wait tcp://redis:6379 -wait tcp://myapp:8000 -timeout 60s sh -c "./src/db/init.js && echo 'db inited.' && yarn mocha && echo 'tests done.'"
     environment:
       APP_URL: http://myapp:8000
+      APP_DB_DATABASE: mydb
       APP_DB_HOST: db
-      APP_DB_USER: root
-      APP_DB_PASSWORD: rootsecretpassword
+      APP_DB_USER: john
+      APP_DB_PASSWORD: mysecretpassword
       APP_REDIS_HOST: redis
       APP_REDIS_PORT: 6379
       MOCK_SERVER_PORT: 8002

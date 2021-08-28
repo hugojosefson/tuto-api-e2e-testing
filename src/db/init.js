@@ -1,36 +1,33 @@
-import knex from 'knex'
+#!/usr/bin/env node
+
 import { config } from '../config.js'
+import { getPool } from './pool.js'
+import { execute } from './query.js'
 
-const db = knex({
-  client: 'mysql2',
-  connection: {
-    database: 'mysql',
-    host: config.db.host,
-    user: config.db.user,
-    password: config.db.password
+const MIGRATION = `
+CREATE TABLE IF NOT EXISTS user (
+  PRIMARY KEY (id),
+  id MEDIUMINT NOT NULL AUTO_INCREMENT,
+  email VARCHAR(256) NOT NULL,
+  firstname VARCHAR(256) NOT NULL
+);`
+
+getPool(config.db).then(
+  db => {
+    console.log('Creating table (if not exists)...')
+    execute(db, MIGRATION).then(
+      () => {
+        console.log('Creating table (if not exists)...DONE.')
+        db.end()
+      },
+      error => {
+        console.error(error.stack)
+        process.exit(error.code || 1)
+      }
+    )
+  },
+  error => {
+    console.error(error.stack)
+    process.exit(error.code || 1)
   }
-})
-
-console.log('Creating tables ...')
-
-db.schema
-  .hasTable('users')
-  .then((exists) => {
-    if (!exists) {
-      console.log('Creating table \'users\'')
-      return db.schema.createTable('users', (table) => {
-        table.increments()
-        table.string('email').notNullable()
-        table.string('firstname').notNullable()
-        table.timestamps(true, true)
-      })
-    }
-  })
-  .then(() => {
-    console.log('Tables created successfully')
-    process.exit(0)
-  })
-  .catch(err => {
-    console.log(`Unable to init tables : ${err}`)
-    process.exit(1)
-  })
+)
