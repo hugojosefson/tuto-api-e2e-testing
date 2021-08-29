@@ -2,11 +2,13 @@
 
 import { resolve } from 'path'
 import marv from 'marv/api/promise.js'
-import driver from 'marv-mysql-driver'
-import { config } from '../config.js'
+import marvMysqlDriver from 'marv-mysql-driver'
+import { ensureDbServerIsUp } from './pool.js'
 
-;(async () => {
+export async function migrate (dbConfig) {
+  await ensureDbServerIsUp(dbConfig)
   const directory = resolve('migrations')
   const migrations = await marv.scan(directory)
-  await marv.migrate(migrations, driver({ connection: config.db }))
-})()
+  const driver = marvMysqlDriver({ connection: dbConfig })
+  await marv.migrate(migrations, driver)
+}

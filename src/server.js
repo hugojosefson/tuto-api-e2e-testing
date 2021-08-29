@@ -5,10 +5,12 @@ import fetch from 'node-fetch'
 import { config } from './config.js'
 import { getPool } from './db/pool.js'
 import { queryForAll, queryForOneOfLastStatement } from './db/query.js'
+import { migrate } from './db/init.js'
 
 const app = express()
 
 ;(async () => {
+  await migrate(config.db)
   const db = await getPool(config.db)
 
   app.use(bodyParser.urlencoded({ extended: false }))

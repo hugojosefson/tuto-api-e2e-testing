@@ -2,36 +2,15 @@
 
 set -ex
 
-ensure_empty_dir(){
-  if [ -z "${1}" ]; then
-    echo "ERROR: ensure_empty_dir takes a directory as argument." >&2
-    exit 2
-  fi
-  dir="$(cd "${1}" && pwd)"
-  dir_basename="$(basename "${dir}")"
-  parent_dir="$(cd "${dir}"/.. && pwd)"
-  if [ "${dir}" != "${parent_dir}/${dir_basename}" ]; then
-    echo "ERROR: Expected \"${dir}\" to equal \"${parent_dir}/${dir_basename}\"." >&2
-    exit 1
-  fi
-
-  mkdir -p "${dir}"
-  docker run --rm -i \
-    -v "${parent_dir}:/target_parent_dir" \
-    -w "/target_parent_dir" \
-    -e dir_basename="${dir_basename}" \
-    alpine \
-    sh -c 'rm -rf "${dir_basename}"'
-  mkdir -p "${dir}"
-}
-
 PROJECT_DIR="$(cd "$(dirname "$0")"/.. && pwd)"
 cd "${PROJECT_DIR}"
-
-export DB_VAR_LIB_MYSQL="${PROJECT_DIR}/target/run-tests-in-docker-compose/db/var_lib_mysql"
-ensure_empty_dir "${DB_VAR_LIB_MYSQL}"
 
 cat ".gitignore" ".git/info/exclude" > ".dockerignore"
 
 # We downloaded the docker-compose script from https://github.com/docker/compose/releases/download/1.29.2/run.sh
-exec "${PROJECT_DIR}/scripts/docker-compose" up --build --abort-on-container-exit
+./scripts/docker-compose rm --force --stop -v
+exec ./scripts/docker-compose up \
+  --build \
+  --renew-anon-volumes \
+  --remove-orphans \
+  --abort-on-container-exit

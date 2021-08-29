@@ -11,8 +11,6 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
     expose:
       - 3306
-    volumes:
-      - "${DB_VAR_LIB_MYSQL}:/var/lib/mysql"
 
   myapp:
     build: .
@@ -31,7 +29,7 @@ services:
 
   myapp-tests:
     image: myapp
-    command: dockerize -wait tcp://db:3306 -wait tcp://myapp:8000 -timeout 60s sh -c "./src/db/init.js && echo 'db inited.' && yarn mocha && echo 'tests done.'"
+    command: dockerize -wait tcp://db:3306 -wait tcp://myapp:8000 -timeout 60s sh -c "yarn mocha && echo 'tests done.'"
     environment:
       APP_URL: http://myapp:8000
       APP_DB_DATABASE: mydb
