@@ -97,7 +97,6 @@ describe('Users', () => {
           mock.requests[0].query.should.have.property('email')
           mock.requests[0].query.email.should.equal(TEST_USER.email)
 
-          console.log({ createdUserId })
           queryForOne(db, 'SELECT * FROM user WHERE id=:id', { id: createdUserId }).then(
             cacheData => {
               cacheData.should.have.property('email')

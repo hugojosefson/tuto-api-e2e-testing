@@ -4,7 +4,7 @@ import cors from 'cors'
 import fetch from 'node-fetch'
 import { config } from './config.js'
 import { getPool } from './db/pool.js'
-import { insertForId, queryForAll } from './db/query.js'
+import { queryForAll, queryForOneOfLastStatement } from './db/query.js'
 
 const app = express()
 
@@ -33,9 +33,13 @@ const app = express()
         return res.sendStatus(403)
       }
 
-      const id = await insertForId(
+      const { id } = await queryForOneOfLastStatement(
         db,
-        'INSERT INTO user (email, firstname) VALUES (:email, :firstname);',
+        `BEGIN;
+          SELECT UUID() INTO @id;
+          INSERT INTO user (id, email, firstname) VALUES (@id, :email, :firstname);
+          SELECT @id AS id;
+        COMMIT;`,
         userData
       )
       res.status(201).send({ id, ...userData })
