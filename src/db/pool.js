@@ -33,8 +33,5 @@ export async function getPool (dbConfig) {
 
 export async function ensureDbServerIsUp (dbConfig) {
   const pool = await getPool(dbConfig)
-  if (pool && typeof pool.end === 'function') {
-    await Promise.resolve(pool.end())
-    console.error('Ended the pool.')
-  }
+  await pool.end()
 }

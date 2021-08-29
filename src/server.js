@@ -25,25 +25,30 @@ const app = express()
     return json.format === true
   }
 
+  app.get('/api/users/:id', async (req, res, next) => {
+    try {
+      const id = req.params.id
+      if (typeof id !== 'string' || id.length !== 36) {
+        return res.sendStatus(404)
+      }
+      const user = await queryForOne(db, 'SELECT id, email, firstname FROM user WHERE id=:id', { id })
+      if (!user) {
+        return res.sendStatus(404)
+      }
+      res.send(user)
+    } catch (error) {
+      console.error('ERROR: ', error)
+      next(error)
+    }
+  })
+
   app.get('/api/users', (req, res, next) => {
-    queryForAll(db, 'select id, email, firstname from user;')
+    queryForAll(db, 'SELECT id, email, firstname FROM user')
       .then(users => res.status(200).send(users))
       .catch(err => {
         console.error(`Unable to fetch users: ${err.message}. ${err.stack}`)
         return next(err)
       })
-  })
-
-  app.get('/api/users/:id', async (req, res, next) => {
-    const id = req.params.id
-    if (typeof id !== 'string' || id.length !== 36) {
-      return res.status(404)
-    }
-    const user = await queryForOne(db, 'select id, email, firstname from user WHERE id=:id;', { id })
-    if (!user) {
-      return res.status(404)
-    }
-    res.send(user)
   })
 
   app.post('/api/users', async (req, res, next) => {
