@@ -2,9 +2,23 @@
 
 set -ex
 
-PROJECT_DIR="$(dirname "$(dirname "$0")")"
+ensure_empty_dir(){
+  if [ -z "${1}" ]; then
+    echo "ERROR: ensure_empty_dir takes a directory as argument." >&2
+    exit 1
+  fi
+  mkdir -p "${1}"
+  rm -rf "${1}"
+  mkdir -p "${1}"
+}
 
-cat "${PROJECT_DIR}/.gitignore" "${PROJECT_DIR}/.git/info/exclude" > "${PROJECT_DIR}/.dockerignore"
+PROJECT_DIR="$(cd "$(dirname "$0")"/.. && pwd)"
+cd "${PROJECT_DIR}"
+
+export DB_VAR_LIB_MYSQL="${PROJECT_DIR}/target/run-tests-in-docker-compose/db/var_lib_mysql"
+ensure_empty_dir "${DB_VAR_LIB_MYSQL}"
+
+cat ".gitignore" ".git/info/exclude" > ".dockerignore"
 
 # We downloaded the docker-compose script from https://github.com/docker/compose/releases/download/1.29.2/run.sh
 exec "${PROJECT_DIR}/scripts/docker-compose" up --build --abort-on-container-exit

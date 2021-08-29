@@ -11,6 +11,8 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
     expose:
       - 3306
+    volumes:
+      - "${DB_VAR_LIB_MYSQL}:/var/lib/mysql"
 
   myapp:
     build: .
