@@ -2,7 +2,6 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import fetch from 'node-fetch'
-import { createClient } from 'redis'
 import { config } from './config.js'
 import { getPool } from './db/pool.js'
 import { insertForId, queryForAll } from './db/query.js'
@@ -11,11 +10,6 @@ const app = express()
 
 ;(async () => {
   const db = await getPool(config.db)
-
-  const redis = createClient({
-    host: config.redis.host,
-    port: config.redis.port
-  })
 
   app.use(bodyParser.urlencoded({ extended: false }))
   app.use(bodyParser.json())
@@ -44,7 +38,6 @@ const app = express()
         'INSERT INTO user (email, firstname) VALUES (:email, :firstname);',
         userData
       )
-      await redis.set(id, JSON.stringify(userData))
       res.status(201).send({ id, ...userData })
     } catch (err) {
       console.error(`Error: Unable to create user: ${err.message}. ${err.stack}`)

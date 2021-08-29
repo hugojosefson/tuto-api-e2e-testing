@@ -7,7 +7,8 @@ import cors from 'cors'
 import chai from 'chai'
 import chaiHttp from 'chai-http'
 import { config } from '../src/config.js'
-import { createClient } from 'redis'
+import { queryForOne } from '../src/db/query.js'
+import { getPool } from '../src/db/pool.js'
 
 const SERVER_URL = process.env.APP_URL || 'http://localhost:8000'
 const MOCK_SERVER_PORT = process.env.MOCK_SERVER_PORT || 8002
@@ -15,16 +16,12 @@ const MOCK_SERVER_PORT = process.env.MOCK_SERVER_PORT || 8002
 chai.use(chaiHttp)
 chai.should()
 
-const redis = createClient({
-  host: config.redis.host,
-  port: config.redis.port
-})
-
 const TEST_USER = {
   email: 'john@doe.com',
   firstname: 'John'
 }
 
+let db
 let createdUserId
 
 const mock = {
@@ -63,11 +60,12 @@ function teardownMock () {
 describe('Users', () => {
   before(async () => {
     await initMock()
+    db = await getPool(config.db)
   })
 
-  after(() => {
-    redis.quit()
+  after(async () => {
     teardownMock()
+    await db.end()
   })
 
   beforeEach(() => (mock.requests = []))
@@ -99,16 +97,17 @@ describe('Users', () => {
           mock.requests[0].query.should.have.property('email')
           mock.requests[0].query.email.should.equal(TEST_USER.email)
 
-          redis.get(createdUserId, (err, cacheData) => {
-            if (err) throw err
-            cacheData = JSON.parse(cacheData)
-            cacheData.should.have.property('email')
-            cacheData.should.have.property('firstname')
-            cacheData.email.should.equal(TEST_USER.email)
-            cacheData.firstname.should.equal(TEST_USER.firstname)
-
-            done()
-          })
+          console.log({ createdUserId })
+          queryForOne(db, 'SELECT * FROM user WHERE id=:id', { id: createdUserId }).then(
+            cacheData => {
+              cacheData.should.have.property('email')
+              cacheData.should.have.property('firstname')
+              cacheData.email.should.equal(TEST_USER.email)
+              cacheData.firstname.should.equal(TEST_USER.firstname)
+              done()
+            },
+            done
+          )
         }
       })
   })

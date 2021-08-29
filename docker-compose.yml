@@ -12,11 +12,6 @@ services:
     expose:
       - 3306
 
-  redis:
-    image: "redis:6-alpine"
-    expose:
-      - 6379
-
   myapp:
     build: .
     image: myapp
@@ -26,30 +21,24 @@ services:
       APP_DB_HOST: db
       APP_DB_USER: john
       APP_DB_PASSWORD: mysecretpassword
-      APP_REDIS_HOST: redis
-      APP_REDIS_PORT: 6379
       APP_EXTERNAL_URL: http://myapp-tests:8002/api
     expose:
       - 8000
     depends_on:
       - db
-      - redis
 
   myapp-tests:
     image: myapp
-    command: dockerize -wait tcp://db:3306 -wait tcp://redis:6379 -wait tcp://myapp:8000 -timeout 60s sh -c "./src/db/init.js && echo 'db inited.' && yarn mocha && echo 'tests done.'"
+    command: dockerize -wait tcp://db:3306 -wait tcp://myapp:8000 -timeout 60s sh -c "./src/db/init.js && echo 'db inited.' && yarn mocha && echo 'tests done.'"
     environment:
       APP_URL: http://myapp:8000
       APP_DB_DATABASE: mydb
       APP_DB_HOST: db
       APP_DB_USER: john
       APP_DB_PASSWORD: mysecretpassword
-      APP_REDIS_HOST: redis
-      APP_REDIS_PORT: 6379
       MOCK_SERVER_PORT: 8002
     expose:
       - 8002
     depends_on:
       - db
-      - redis
       - myapp
