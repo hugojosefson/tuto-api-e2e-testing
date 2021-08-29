@@ -8,9 +8,15 @@ cd "${PROJECT_DIR}"
 cat ".gitignore" ".git/info/exclude" > ".dockerignore"
 
 # We downloaded the docker-compose script from https://github.com/docker/compose/releases/download/1.29.2/run.sh
-./scripts/docker-compose rm --force --stop -v
+if [ "${1}" = "--no-cache" ]; then
+  ./scripts/docker-compose rm --force --stop -v
+  exec ./scripts/docker-compose up \
+    --build \
+    --renew-anon-volumes \
+    --remove-orphans \
+    --abort-on-container-exit
+fi
+
 exec ./scripts/docker-compose up \
   --build \
-  --renew-anon-volumes \
-  --remove-orphans \
   --abort-on-container-exit
