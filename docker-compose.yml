@@ -21,7 +21,7 @@ services:
       APP_DB_HOST: db
       APP_DB_USER: john
       APP_DB_PASSWORD: mysecretpassword
-      APP_EXTERNAL_URL: http://myapp-tests:8002/api
+      APP_EXTERNAL_URL: http://myapp-tests:8002/api/email/
     expose:
       - 8000
     depends_on:

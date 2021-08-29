@@ -4,12 +4,13 @@ import cors from 'cors'
 import fetch from 'node-fetch'
 import { config } from './config.js'
 import { getPool } from './db/pool.js'
-import { queryForAll, queryForOneOfLastStatement } from './db/query.js'
+import { queryForAll, queryForOne, queryForOneOfLastStatement } from './db/query.js'
 import { migrate } from './db/init.js'
 
 const app = express()
 
 ;(async () => {
+  console.dir({ config })
   await migrate(config.db)
   const db = await getPool(config.db)
 
@@ -18,13 +19,34 @@ const app = express()
   app.use(cors())
 
   async function validateUserEmail (email) {
-    const res = await fetch(`${config.app.externalUrl}/validate?email=${email}`)
+    const res = await fetch(`${config.app.externalUrl}${email}`)
     if (res.status !== 200) return false
     const json = await res.json()
-    return json.result === 'valid'
+    return json.format === true
   }
 
-  app.route('/api/users').post(async (req, res, next) => {
+  app.get('/api/users', (req, res, next) => {
+    queryForAll(db, 'select id, email, firstname from user;')
+      .then(users => res.status(200).send(users))
+      .catch(err => {
+        console.error(`Unable to fetch users: ${err.message}. ${err.stack}`)
+        return next(err)
+      })
+  })
+
+  app.get('/api/users/:id', async (req, res, next) => {
+    const id = req.params.id
+    if (typeof id !== 'string' || id.length !== 36) {
+      return res.status(404)
+    }
+    const user = await queryForOne(db, 'select id, email, firstname from user WHERE id=:id;', { id })
+    if (!user) {
+      return res.status(404)
+    }
+    res.send(user)
+  })
+
+  app.post('/api/users', async (req, res, next) => {
     try {
       const { email, firstname } = req.body
       // ... validate inputs here ...
@@ -51,18 +73,9 @@ const app = express()
     }
   })
 
-  app.route('/api/users').get((req, res, next) => {
-    queryForAll(db, 'select id, email, firstname from user;')
-      .then(users => res.status(200).send(users))
-      .catch(err => {
-        console.error(`Unable to fetch users: ${err.message}. ${err.stack}`)
-        return next(err)
-      })
-  })
-
   console.log('Starting web server...')
 
   const port = process.env.PORT || 8000
-  app.listen(port, (server) => console.log(`Server started on: ${server}`))
+  const server = app.listen(port, () => console.log(`Server started on: ${JSON.stringify(server.address())}`))
 })()
 export default app

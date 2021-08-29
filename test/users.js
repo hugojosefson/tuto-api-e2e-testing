@@ -47,7 +47,7 @@ async function initMock () {
   })
 
   mock.server = await mock.app.listen(MOCK_SERVER_PORT)
-  console.log(`Mock server started on port: ${MOCK_SERVER_PORT}`)
+  console.log(`Mock server started on port: ${JSON.stringify(mock.server.address())}`)
 }
 
 function teardownMock () {
@@ -71,7 +71,7 @@ describe('Users', () => {
   beforeEach(() => (mock.requests = []))
 
   it('should create a new user', done => {
-    setupMock(200, { result: 'valid' })
+    setupMock(200, { format: true })
 
     chai
       .request(SERVER_URL)
@@ -93,9 +93,7 @@ describe('Users', () => {
           createdUserId = res.body.id
 
           mock.requests.length.should.equal(1)
-          mock.requests[0].path.should.equal('/api/validate')
-          mock.requests[0].query.should.have.property('email')
-          mock.requests[0].query.email.should.equal(TEST_USER.email)
+          mock.requests[0].path.should.equal(`/api/email/${TEST_USER.email}`)
 
           queryForOne(db, 'SELECT * FROM user WHERE id=:id', { id: createdUserId }).then(
             cacheData => {
@@ -111,7 +109,7 @@ describe('Users', () => {
       })
   })
 
-  it('should get the created user', done => {
+  it('should find the created user', done => {
     chai
       .request(SERVER_URL)
       .get('/api/users')
@@ -122,7 +120,27 @@ describe('Users', () => {
           res.should.have.status(200)
           res.body.should.be.a('array')
 
-          const user = res.body.pop()
+          const foundUser = res.body.find(user => user.id === createdUserId)
+          foundUser.should.be.a('object')
+          foundUser.id.should.equal(createdUserId)
+          foundUser.email.should.equal(TEST_USER.email)
+          foundUser.firstname.should.equal(TEST_USER.firstname)
+          done()
+        }
+      })
+  })
+
+  it('should get the created user', done => {
+    chai
+      .request(SERVER_URL)
+      .get(`/api/users/${createdUserId}`)
+      .end((err, res) => {
+        if (err) {
+          done(err)
+        } else {
+          res.should.have.status(200)
+          const user = res.body
+          user.should.be.a('object')
           user.id.should.equal(createdUserId)
           user.email.should.equal(TEST_USER.email)
           user.firstname.should.equal(TEST_USER.firstname)
@@ -132,7 +150,7 @@ describe('Users', () => {
   })
 
   it('should not create user if mail is spammy', done => {
-    setupMock(200, { result: 'invalid' })
+    setupMock(200, { format: false })
 
     chai
       .request(SERVER_URL)
@@ -145,7 +163,7 @@ describe('Users', () => {
   })
 
   it('should not create user if spammy mail API is down', done => {
-    setupMock(404, { result: 'invalid' })
+    setupMock(404, { format: false })
 
     chai
       .request(SERVER_URL)

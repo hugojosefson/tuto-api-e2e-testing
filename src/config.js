@@ -6,6 +6,6 @@ export const config = {
     password: process.env.APP_DB_PASSWORD
   },
   app: {
-    externalUrl: process.env.APP_EXTERNAL_URL || 'https://superservice.com/api'
+    externalUrl: process.env.APP_EXTERNAL_URL || 'https://disify.com/api/email/'
   }
 }

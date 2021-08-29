@@ -18,7 +18,7 @@ export async function getPool (dbConfig) {
       await pool.execute('select 0')
       return pool
     } catch (error) {
-      if (error.code === 'ECONNREFUSED') {
+      if (['ECONNREFUSED', 'PROTOCOL_CONNECTION_LOST'].includes(error.code)) {
         console.warn('WARN Retrying, because pool is not ready yet.')
       } else {
         console.warn('WARN Retrying, because pool is not ready yet. Unexpected error: ', error)
